@@ -288,28 +288,28 @@ Public methods not part of bgtelevizor class
 def getTVPlayLink(tv_url, tv_username, tv_password):
     log('Start getTVPlayLink')
     #get a bgtelevizor class
-    bgtelevizor = bgtelevizor(tv_username, tv_password)
+    BGtelevizor = bgtelevizor(tv_username, tv_password)
     log('Finished getTVPlayLink')
     #get a play link for the URL
-    return bgtelevizor.getPlayLink(bgtelevizor.openSite(tv_url))
+    return BGtelevizor.getPlayLink(BGtelevizor.openSite(tv_url))
 
 
 def showTVStations(tv_username, tv_password):
     log('Start showTVStations')
     #get a bgtelevizor class
-    bgtelevizor = bgtelevizor(tv_username, tv_password)
+    BGtelevizor = bgtelevizor(tv_username, tv_password)
     log('Finished showTVStations')
     #return list of all TV stations
-    return bgtelevizor.getTVStations(bgtelevizor.openSite(bgtelevizor.MAINURL))
+    return BGtelevizor.getTVStations(BGtelevizor.openSite(BGtelevizor.MAINURL))
 
 def getTVStationsStreams(tv_url, tv_username, tv_password):
     log('Start getTVStationsStreams')
     #get a bgtelevizor class
-    bgtelevizor = bgtelevizor(tv_username, tv_password)
+    BGtelevizor = bgtelevizor(tv_username, tv_password)
     link = tv_url    
     log('Finished getTVStationsStreams')
     #return list with all TV station stream for the selected TV station
-    return bgtelevizor.getTVStreamLinks(bgtelevizor.openSite(link))
+    return BGtelevizor.getTVStreamLinks(BGtelevizor.openSite(link))
          
 def log(text):
     debug = None
