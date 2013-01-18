@@ -1,9 +1,10 @@
-Readme for XMBC neterratv plugin created mr.olix@gmail.com
-
-I created this addon to watch NeterraTV on my jailbreak AppleTV 2. 
-Before I used to stream from my IPad via Airplay but the quality was that good I always had to fight
-with my daughter over IPad. I have also tested the on my Win7 machine. I didn't test on any other hardware.
-
-Note: The plugin uses methods from module script.module.beautifulsoup. This should be installed
-automatically when you install from zip file. If not install the MyVideo.de plugin from Tristan 
+This is a modified version of the neterra plugin for XMBC created by mr.olix@gmail.com, allowing for playback of TV streams on BGTelevizor.net. 
+The plugin uses methods from module script.module.beautifulsoup. This should be installed
+ automatically when you install from zip file. 
+If not install the MyVideo.de plugin from Tristan 
 Fischer which is available in the official XBMC addon repositiory. 
+
+This plugin has been tested on XBMC running on Windows 8, as well as on the openELEC distribution for Raspberry Pi.
+
+Note: In order for the plugin to run properly on the Raspberry Pi, a VC-1 decode key must be purchased from the pi store. (~$2)
+The key is required to unlock hardware decoding of Windows Media Video streams on the device, otherwise only the audio stream will play. 

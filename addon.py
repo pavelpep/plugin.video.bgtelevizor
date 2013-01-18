@@ -26,13 +26,13 @@
 from xbmcswift import Plugin, xbmc, xbmcplugin, xbmcgui, clean_dict
 
 
-import resources.lib.neterratv as neterratv
+import resources.lib.bgtelevizor as bgtelevizor
 import sys
 
 DEBUG = False
 REMOTE_DBG = False
 
-print 'Start neterratv plugin'
+print 'Start bgtelevizor plugin'
 
 # append pydev remote debugger
 if REMOTE_DBG:
@@ -47,8 +47,8 @@ if REMOTE_DBG:
             "You must add org.python.pydev.debug.pysrc to your PYTHONPATH.")
         sys.exit(1)
 
-__addon_name__ = 'Neterra.TV'
-__id__ = 'plugin.video.neterratv'
+__addon_name__ = 'BGTelevizor.net'
+__id__ = 'plugin.video.bgtelevizor'
 
 username = ""
 password = ""
@@ -71,7 +71,7 @@ THUMBNAIL_VIEW_IDS = {'skin.confluence': 500,
 class Plugin_mod(Plugin):
 
     def add_items(self, iterable, is_update=False, sort_method_ids=[],
-                  override_view_mode=False):
+                  override_view_mode=True):
         items = []
         urls = []
         for i, li_info in enumerate(iterable):
@@ -116,108 +116,14 @@ called when the script starts
 def main_menu():
     __log('main_menu start')
     #get a list with the TV stations
-    stations = neterratv.showTVStations(plugin.get_setting('username'), plugin.get_setting('password'))
+    stations = bgtelevizor.showTVStations(plugin.get_setting('username'), plugin.get_setting('password'))
     items=[]
-    for item in stations:
-        items.append({'label': item[0],
-                      'url': plugin.url_for('select_recordorlive',tvstation_name=item[0],tvstation_code=item[1])})
-    return plugin.add_items(items)
-
-'''
-display TV live stream or recorded streams
-'''
-@plugin.route('/select_recordorlive/<tvstation_name>,<tvstation_code>')
-def select_recordorlive(tvstation_name,tvstation_code):
-    __log('select_recordorlive start')
-    items=[]
-    items.append({'label': 'TV ' + tvstation_name,
-            'url': plugin.url_for('tvstation_playtv',tvstation_code=tvstation_code)})
-    #append all others
-    items.append({'label': 'Recorded ' + tvstation_name,
-                  'url': plugin.url_for('show_recordedlist',tvstation_code=tvstation_code)})
-    __log('select_recordorlive')
-    return plugin.add_items(items)
-
-'''
-display list with the available TV streams from the selected TV station
-'''
-@plugin.route('/tvstation_playtv/<tvstation_code>')
-def tvstation_playtv(tvstation_code):
-    
-    __log('tvstation_playtv started with string=%s' % tvstation_code)
-       
-    username = plugin.get_setting('username')
-    password = plugin.get_setting('password')
-    
-    stations = neterratv.getTVStationsStreams(tvstation_code, username, password)
-    
-    items=[]
-    i=0
     for station in stations:
-        if i==0:
-            items=[{'label': 'TV ' + station[0],
-                    'url': plugin.url_for('tvstation_play',tvstation_code=station[1])}]
-            i=i+1
-        else:
-            items.append({'label': 'TV ' + station[0],
-                    'url': plugin.url_for('tvstation_play',tvstation_code=station[1])})
-
-    __log('tvstation_playtv finished with string=%s' % tvstation_code)
+        items.append({'label': station[0],
+                      'url': plugin.url_for('tvstation_play',tvstation_name=station[0],tvstation_code=station[1]),
+                      'thumbnail' : station[2]})
     return plugin.add_items(items)
 
-'''
-show available recorded streams for select TV station
-'''
-@plugin.route('/show_recordedlist/<tvstation_code>')
-def show_recordedlist(tvstation_code):
-    
-    __log('select_recordedstreams start')
-
-    username = plugin.get_setting('username')
-    password = plugin.get_setting('password')
-    
-    stations = neterratv.showTVStationRecorded(tvstation_code, username, password)
-    
-    items=[]
-    i=0
-    for station in stations:
-        if i==0:
-            items=[{'label': station[0],
-                    'url': plugin.url_for('show_recordedstreams',tvstation_code=station[1])}]
-            i=i+1
-        else:
-            items.append({'label': station[0],
-                    'url': plugin.url_for('show_recordedstreams',tvstation_code=station[1])})
-
-    __log('select_recordedstreams finished with string=%s' % tvstation_code)
-    return plugin.add_items(items)
-
-'''
-shows available recorded streams for selected stream
-'''
-@plugin.route('/show_recordedstreams/<tvstation_code>')
-def show_recordedstreams(tvstation_code):
-    
-    __log('show_recordedstreams start')
-
-    username = plugin.get_setting('username')
-    password = plugin.get_setting('password')
-    
-    stations = neterratv.showTVStationRecordedStreams(tvstation_code, username, password)
-    
-    items=[]
-    i=0
-    for station in stations:
-        if i==0:
-            items=[{'label': station[0],
-                    'url': plugin.url_for('tvstation_play',tvstation_code=station[1])}]
-            i=i+1
-        else:
-            items.append({'label': station[0],
-                    'url': plugin.url_for('tvstation_play',tvstation_code=station[1])})
-
-    __log('show_recordedstreams with string=%s' % tvstation_code)
-    return plugin.add_items(items)
 
 '''
 returns the play link for the given URL
@@ -230,23 +136,16 @@ def tvstation_play(tvstation_code):
     username = plugin.get_setting('username')
     password = plugin.get_setting('password')
     
-    url = neterratv.getTVPlayLink(tvstation_code,username,password)
-    
+    url = bgtelevizor.getTVPlayLink(tvstation_code,username,password)
+    print 'URL: ' + url
     '''    
     items=[{'label': plugin.get_string(30002),
                   'url': url,'is_folder':False,'title':'Play','video_id':'0'}]
     '''
-    
-    #try to call the player with the link 
 
-    #listitem = xbmcgui.ListItem(label='Play TV', path=url)
+    xbmc.Player(xbmc.PLAYER_CORE_MPLAYER).play(url)
 
-    #listitem.setInfo(type='Video',infoLabels={ "Label": "TV" })
-    #xbmc.Player(xbmc.PLAYER_CORE_MPLAYER)
-    #xbmcplugin.setResolvedUrl(handle=int(sys.argv[1]), succeeded=True, listitem=listitem)
     
-    xbmc.Player().play(url)
-    print 'URL: ' + url
     __log('tvstation_play end')
     
     #return __add_items(items)
@@ -279,14 +178,14 @@ def __add_items(entries):
                                                 path=e['path'])})
         elif e['is_folder']:
             items.append({'label': e['title'],
-                          'iconImage': e.get('thumb', 'DefaultFolder.png'),
+                          'iconImage': e.get('thumbnail', 'DefaultFolder.png'),
                           'is_folder': True,
                           'is_playable': False,
                           'url': plugin.url_for('show_path',
                                                 path=e['path'])})
         else:
             items.append({'label': e['title'],
-                          'iconImage': e.get('thumb', 'DefaultVideo.png'),
+                          'iconImage': e.get('thumbnail', 'DefaultVideo.png'),
                           'info': {'duration': e.get('length', '0:00'),
                                    'plot': e.get('description', ''),
                                    'studio': e.get('username', ''),

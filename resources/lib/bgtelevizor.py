@@ -25,21 +25,21 @@ import os.path
 from BeautifulSoup import BeautifulSoup
 
 # set debug to generate log entries
-DEBUG = False
+DEBUG = True
 LIBNAME = 'neterra'
 
 '''
-class handles html get and post for neterratv website
+class handles html get and post for bgtelevizor website
 '''
 class neterra:
     #static values
     CLASSNAME = 'neterra'
     COOKIEFILE = 'cookies.lwp'
-    PLUGINID = 'plugin.video.neterratv'
-    MAINURL = 'http://www.neterra.tv/bg/'
-    LOGINURL = 'http://www.neterra.tv/bg/login.php'
+    PLUGINID = 'plugin.video.bgtelevizor'
+    MAINURL = 'http://bgtelevizor.net/'
+    LOGINURL = 'http://bgtelevizor.net/login/'
     USERAGENT = {'User-agent' : 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'}
-    BTVURL = 'http://www.neterra.tv/bg/media.php?id=1&bm=2'
+    BTVURL = 'http://bgtelevizor.net/live/BTV/'
     
     
     #globals
@@ -121,7 +121,7 @@ opens url and returns html stream
         # create a request object
         handle = urlopen(req)
         htmlstr = handle.read()
-        startpoint = htmlstr.find('<form action="login.php" method="post" id="login" name="login">')
+        startpoint = htmlstr.find('<form method="post" action="http://bgtelevizor.net/login/" id="loginForm" class="rightHeader "><div class="rightHeaderL">')
         if (startpoint != -1):
             #if not logged in
             #login
@@ -142,9 +142,9 @@ returns true if login successful
         isLoggedIn = False
         urlopen = urllib2.urlopen
         request = urllib2.Request
-        theurl = 'http://www.neterra.tv/bg/login.php'
+        theurl = 'http://bgtelevizor.net/login/'
         self.__log('----URL request started for: ' + theurl + ' ----- ')
-        txdata = 'username=' + self.__username__ + '&password=' + self.__password__ + '&submitted=1'
+        txdata = 'action=login' + '&username=' + self.__username__ + '&password=' + self.__password__ 
         req = request(self.LOGINURL, txdata, self.USERAGENT)
         self.__log('----URL requested: ' + theurl + ' txdata: ' + txdata)
         # create a request object
@@ -154,7 +154,7 @@ returns true if login successful
         self.updateCookie()
         #check for string in page 
         #<form action="login.php" method="post" id="login" name="login">
-        startpoint = link.find('<form action="login.php" method="post" id="login" name="login">')
+        startpoint = link.find('<form id="regi" method="post" action="">')
         if (startpoint == -1):
             isLoggedIn = True
         self.__log('Finished logIn')
@@ -164,17 +164,13 @@ returns true if login successful
 returns playable link from html stream
 ''' 
     def getPlayLink(self, html):
+        tree = self.getTree(html)
         self.__log('Start getPlayLink')
-        #find <PARAM NAME="url" VALUE="mms
-        startpoint = html.find('<PARAM NAME="url" VALUE="mms')
-        self.__log('startpoint: ' + str(startpoint))
-        #find next > from start
-        endpoint = html.find('>', startpoint)
-        self.__log('endpoint: ' + str(endpoint))
-        res = html[startpoint:endpoint]
-        self.__log('res: ' + str(res))
-        startpoint = res.find("mms")
-        mmsurl = res[startpoint:len(res) - 1]
+
+
+        streamURL = tree.find('param', {'name': 'url'}).get('value')
+        mmsTree = self.getTree(self.openSite(streamURL))
+        mmsurl =  mmsTree.find('ref').get('href')
         self.__log('Playablelink is mmsurl: ' + mmsurl)
         self.__log('Finished getPlayLink')
         return mmsurl
@@ -187,16 +183,18 @@ returns a soup obejct
         #return BeautifulSoup(html, convertEntities=BeautifulSoup.HTML_ENTITIES)
         
     '''
-    returns list with TV stations from the tabke head_tv_select 
+    returns list with TV stations from the table head_tv_select 
 ''' 
     def getTVStations(self, html):
         self.__log('Start getTVStations')
         tree = self.getTree(html)
-        sections = tree.find('div', {'class': 'head_tv_select'})
-        links = sections.findAll('a')
-        items = []
-        for lnk in links:                    
-            items.append((lnk.text.encode('utf-8'), lnk.attrs[1][1]))        
+        channels = tree.findAll('div', {'class': 'bubbleInfo'})
+        items =[]
+        for channel in channels:     
+            channelName = channel.find('div', {'class': 'Qtop'}).text.encode('utf-8')
+            channelURL = channel.find('a').get('href').encode('utf-8')
+            channelLogo = channel.find('a').find('img').get('src')            
+            items.append((channelName, channelURL, channelLogo))   
         self.__log('Finished getTVStations')
         return items
 
@@ -265,7 +263,6 @@ returns a soup obejct
                                     url=''
                                 else:
                                     #build the url
-                                    # example http://www.neterra.tv/bg/playlivestream.php?epid=94718&q=12&plid=3
                                     url = 'http://www.neterra.tv/bg/playlivestream.php?epid=' + str(parameters[0]) + '&q=' + str(parameters[1]) + '&plid=' + str(parameters[2])                                           
                             else:
                                 url = ''                    
@@ -280,98 +277,9 @@ returns a soup obejct
         return items
 
         '''
-        returns link to recorded series or shows  
-    ''' 
-    def getTVStationsRecordedList(self, html):
-            self.__log('Start getTVStationsRecordedStreamsLinks')
-            #replace the DOCTYPE to ensure correct html encoding
-            html = html.replace('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN", "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">', '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">')
-            tree = self.getTree(html)            
-            items = []
-            # check if table exist
-            i = html.find('class="predavane_main_holder"')
-            if i>0:       
-                sections = tree.find('table', {'class': 'predavane_main_holder'})        
-                #get all cells
-                cells = sections.findAll('td')                
-                #loop over cells and fill items
-                for cell in cells:
-                    if cell.text<>'&nbsp;':
-                        items.append([cell.text,cell.a['href']])
-                        print 'Cell href: ' + cell.a['href']
-            else:
-                items.append(['No recorded found','nix'])
-            self.__log('Finished getTVStationsRecordedStreamsLinks')
-            return items
-
     '''
-    return link to TV stream 
-''' 
-    def getTVRecordedStreamLinks(self, html):
-        self.__log('Start getTVRecordedStreamLinks')
-        html = html.replace('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN", "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">', '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">')
-        tree = self.getTree(html)  
-        sections = tree.find('table', {'id': 'mostrecent'})
-        
-        #get all the rows
-        rows = sections.findAll('tr')
-        
-        #loop over the rows
-        #get TV station name from first cell
-        #get links from the next cells
-        #return list
-        items = []
-        #header list
-        headers = []
-        rowcount = 0
-        for row in rows:
-            rowcount = rowcount + 1           
-            #print "Row:" + row.text
-            cells = row.contents            
-            column = 0
-            tvstationname = ''
-            #get qualities from table headers and fill header list
-            if rowcount == 1:
-                for cell in cells:
-                    headers.append(cell.text.replace('&nbsp;',''))
-            else:            
-                for cell in cells:                    
-                    url = ''
-                    text = str(cell)
-                    #strip of TD tags
-                    if column == 0:
-                        # for first cell get the text with name of the station
-                        tvstationname = cell.text.replace('&nbsp;','')                                
-                        url = ''
-                    else:
-                        # for all others get the onclick link
-                        # example: onclick="playLiveStream('205957', '15',5, '576', '518')        
-                        startpoint = text.find('playStream')
-                        if startpoint > 1:
-                            endpoint = text.find('">', startpoint)
-                            text = text[startpoint:endpoint]                
-                            text = text.replace("'", '')
-                            text = text.replace('playStream', '')
-                            text = text.replace('(', '')
-                            text = text.replace(')', '')
-                            text = text.replace(' ', '')
-                            parameters = text.split(",")                            
-                            #skip entries for flash player
-                            if int(parameters[2])==5:                                
-                                url=''
-                            else:
-                                #build the url
-                                # http://www.neterra.tv/bg/playlivestream.php?epid=94718&q=12&plid=3
-                                url = 'http://www.neterra.tv/bg/playstream.php?epid=' + str(parameters[0]) + '&q=' + str(parameters[1]) + '&plid=' + str(parameters[2])                                           
-                        else:
-                            url = ''                    
-                    if len(url) > 1:
-                        print 'Columnnr: ' + str(column)
-                        items.append([tvstationname+' '+headers[column], url])
-                    #increase column number
-                    column = column + 1        
-        self.__log('Finished getTVRecordedStreamLinks')
-        return items
+
+
 
 '''
 Public methods not part of neterra class
@@ -398,28 +306,10 @@ def getTVStationsStreams(tv_url, tv_username, tv_password):
     log('Start getTVStationsStreams')
     #get a neterra class
     Neterra = neterra(tv_username, tv_password)
-    link = Neterra.MAINURL + tv_url    
+    link = tv_url    
     log('Finished getTVStationsStreams')
     #return list with all TV station stream for the selected TV station
     return Neterra.getTVStreamLinks(Neterra.openSite(link))
-
-def showTVStationRecorded(tv_url, tv_username, tv_password):
-    log('Start showTVStationRecorded')
-    #get a neterra class
-    Neterra = neterra(tv_username, tv_password)
-    link = Neterra.MAINURL + tv_url    
-    log('Finished showTVStationRecorded')
-    #return list with all TV station stream for the selected TV station
-    return Neterra.getTVStationsRecordedList(Neterra.openSite(link))
-
-def showTVStationRecordedStreams(tv_url, tv_username, tv_password):
-    log('Start showTVStationRecorded')
-    #get a neterra class
-    Neterra = neterra(tv_username, tv_password)
-    link = Neterra.MAINURL + tv_url    
-    log('Finished showTVStationRecorded')
-    #return list with all TV station stream for the selected TV station
-    return Neterra.getTVRecordedStreamLinks(Neterra.openSite(link))
          
 def log(text):
     debug = None
