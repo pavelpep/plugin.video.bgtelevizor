@@ -1,4 +1,4 @@
-plugin.video.neterratv
+plugin.video.bgtelevizor
 =====================
 
-XBMC plugin for neterra TV. Bulgaria TV internet provider
+XBMC plugin for BGTelevizor.net, Bulgarian TV internet provider
