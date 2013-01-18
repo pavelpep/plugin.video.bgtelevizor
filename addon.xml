@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.bgtelevizor" name="BGTelevizor.net" version="1.0" provider-name="pavelpep@live.com">
+<addon id="plugin.video.bgtelevizor" name="BGTelevizor.net" version="1.0" provider-name="pavelpep">
   <requires>
     <import addon="xbmc.python" version="2.0"/>
     <import addon="script.module.xbmcswift" version="0.2.0"/>
@@ -13,8 +13,7 @@
     <language>en</language>
     <summary lang="en">Video plugin for BGTelevizor.net</summary>   
     <description lang="en">
-    This plugin provides access to the TV streams on BGTelevizor.net 
-    (account is required) Note: You must enter your username and password in the plug-in settings, before using the plugin for the first time.
+      This plugin provides access to the TV streams on BGTelevizor.net(account is required) Note: You must enter your username and password in the plug-in settings, before using the plugin for the first time.
     </description>   
     <disclaimer lang="en">You have to sign up and pay to access BGTelevizor.net TV streams</disclaimer>
   </extension>
