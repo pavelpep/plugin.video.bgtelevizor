@@ -25,15 +25,15 @@ import os.path
 from BeautifulSoup import BeautifulSoup
 
 # set debug to generate log entries
-DEBUG = True
-LIBNAME = 'neterra'
+DEBUG = False
+LIBNAME = 'bgtelevizor'
 
 '''
 class handles html get and post for bgtelevizor website
 '''
-class neterra:
+class bgtelevizor:
     #static values
-    CLASSNAME = 'neterra'
+    CLASSNAME = 'bgtelevizor'
     COOKIEFILE = 'cookies.lwp'
     PLUGINID = 'plugin.video.bgtelevizor'
     MAINURL = 'http://bgtelevizor.net/'
@@ -134,7 +134,7 @@ opens url and returns html stream
         return htmlstr
     
     '''
-login into the neterra tv webpage
+login into the bgtelevizor tv webpage
 returns true if login successful
 '''    
     def logIn(self):
@@ -263,7 +263,7 @@ returns a soup obejct
                                     url=''
                                 else:
                                     #build the url
-                                    url = 'http://www.neterra.tv/bg/playlivestream.php?epid=' + str(parameters[0]) + '&q=' + str(parameters[1]) + '&plid=' + str(parameters[2])                                           
+                                    url = 'http://www.bgtelevizor.tv/bg/playlivestream.php?epid=' + str(parameters[0]) + '&q=' + str(parameters[1]) + '&plid=' + str(parameters[2])                                           
                             else:
                                 url = ''                    
                         if len(url) > 1:
@@ -282,34 +282,34 @@ returns a soup obejct
 
 
 '''
-Public methods not part of neterra class
+Public methods not part of bgtelevizor class
 '''
 
 def getTVPlayLink(tv_url, tv_username, tv_password):
     log('Start getTVPlayLink')
-    #get a neterra class
-    Neterra = neterra(tv_username, tv_password)
+    #get a bgtelevizor class
+    bgtelevizor = bgtelevizor(tv_username, tv_password)
     log('Finished getTVPlayLink')
     #get a play link for the URL
-    return Neterra.getPlayLink(Neterra.openSite(tv_url))
+    return bgtelevizor.getPlayLink(bgtelevizor.openSite(tv_url))
 
 
 def showTVStations(tv_username, tv_password):
     log('Start showTVStations')
-    #get a neterra class
-    Neterra = neterra(tv_username, tv_password)
+    #get a bgtelevizor class
+    bgtelevizor = bgtelevizor(tv_username, tv_password)
     log('Finished showTVStations')
     #return list of all TV stations
-    return Neterra.getTVStations(Neterra.openSite(Neterra.MAINURL))
+    return bgtelevizor.getTVStations(bgtelevizor.openSite(bgtelevizor.MAINURL))
 
 def getTVStationsStreams(tv_url, tv_username, tv_password):
     log('Start getTVStationsStreams')
-    #get a neterra class
-    Neterra = neterra(tv_username, tv_password)
+    #get a bgtelevizor class
+    bgtelevizor = bgtelevizor(tv_username, tv_password)
     link = tv_url    
     log('Finished getTVStationsStreams')
     #return list with all TV station stream for the selected TV station
-    return Neterra.getTVStreamLinks(Neterra.openSite(link))
+    return bgtelevizor.getTVStreamLinks(bgtelevizor.openSite(link))
          
 def log(text):
     debug = None
